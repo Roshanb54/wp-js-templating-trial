@@ -1,0 +1,30 @@
+.delete-row{
+	color: red;
+	text-decoration: none;
+}
+.delete-row:hover{
+	color: #ccc;
+}
+
+table#social-icons-listing-table {
+    border-collapse: collapse;
+    width: 100%;
+				border: 1px solid #e7e7e7;
+}
+
+table#social-icons-listing-table th, table#social-icons-listing-table td {
+    text-align: left;
+    padding: 15px;
+				border-bottom: 1px solid #ddd;
+}
+
+table#social-icons-listing-table tr:nth-child(even){background-color: #f2f2f2}
+table#social-icons-listing-table tr:hover{background-color:#f5f5f5}
+table#social-icons-listing-table th {
+    background-color: #4CAF50;
+    color: white;
+}
+th {
+    background-color: #4CAF50;
+    color: white;
+}

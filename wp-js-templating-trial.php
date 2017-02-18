@@ -9,6 +9,9 @@
  * Domain Path: languages
  * License: GPL V3
  *
+ * Note: This is just to show demo, do not use for production.
+ *
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
  * published by the Free Software Foundation.
@@ -27,52 +30,106 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class for WP JS Templating Trail.
+ * Prefix: wjtt
  */
-final class WP_Js_Templating_Trail {
 
-	/**
-	 * The single instance of the class.
-	 *
-	 * @var There's only one instance
-	 */
-	private static $instance;
+/**
+ * Register a custom menu page.
+ */
+function wjtt_register_menu() {
+	add_menu_page(
+		__( 'Social Icons', 'wp-js-templating-trail' ), //
+		'Social Icons', //
+		'manage_options', // Capabalities check.
+		'social-icons', // Page slug.
+		'wjtt_load_page_content', // Callback function.
+		'dashicons-share-alt', // Dashicon name.
+		6
+	);
+}
+add_action( 'admin_menu', 'wjtt_register_menu' );
 
-	public static function instance() {
-		if ( ! isset( self::$instance ) && ! ( self::$instance instanceof WP_Js_Templating_Trail ) ) {
-			self::$instance = new WP_Js_Templating_Trail;
-		}
-		return self::$instance;
-	}
-
-	function __construct() {
-		add_action( 'init', array( $this, 'init' ) );
-	}
-
-	function init() {
-		$this->define();
-		$this->includes();
-	}
-
-	function includes() {
-		include 'inc/class-assets.php';
-		include 'inc/admin/class-admin-page.php';
-	}
-
-	function define() {
-		define( 'WJTT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-	}
+/**
+ * Load page content.
+ */
+function wjtt_load_page_content() {
+	include 'views/page-content.php';
 }
 
 /**
- * The main function that returns the one and only WP_Js_Templating_Trail instance.
- * Use this function to access classes and methods.
- *
- * @return object The one true WP_Js_Templating_Trail instance.
+ * Add scripts.
  */
-function wp_js_templating_trail() {
-	return WP_Js_Templating_Trail::instance();
-}
+function wjtt_add_scripts() {
+	wp_enqueue_style( 'wjtt-style', plugin_dir_url( __FILE__ ) . 'assets/css/style.css' );
+	wp_register_script( 'wjtt-scripts', plugin_dir_url( __FILE__ ) . 'assets/js/scripts.js', array( 'jquery', 'wp-util' ) );
+	$localize_values = array();
+	$social_icons = get_option( 'wjtt_values' );
+	if ( isset( $social_icons['social'] ) && ! empty( $social_icons['social'] ) ) {
+		$localize_values = $social_icons['social'];
+	}
 
-// Start WP JS Templating Trail.
-wp_js_templating_trail();
+	// Reorder value again.
+	$localize_values = array_values( $localize_values );
+
+	wp_localize_script( 'wjtt-scripts', 'wjtt', $localize_values );
+	wp_enqueue_script( 'wjtt-scripts' );
+}
+add_action( 'admin_enqueue_scripts', 'wjtt_add_scripts' );
+
+/**
+ * Add js template.
+ */
+function wjtt_js_template() {
+?>
+<script type="text/html" id="tmpl-social-links-add">
+	<#
+	var lastIndex = jQuery('#social-icons-listing-table tbody tr:last').data('index'),
+					currentIndex = (typeof lastIndex === 'undefined') ? 0 : lastIndex + 1;
+	#>
+		<tr data-index="{{currentIndex}}">
+			<td><input type="text" name="wjtt[social][{{currentIndex}}][title]" value="" /></td>
+			<td><input type="text" name="wjtt[social][{{currentIndex}}][link]" value="" /></td>
+			<td><input type="checkbox" name="wjtt[social][{{currentIndex}}][target]" value="1" /></td>
+			<td><a href="javascript:void(0);" data-deleteindex="{{currentIndex}}" class="delete-row"><span class="dashicons dashicons-trash"></span></td>
+		</tr>
+</script>
+<?php
+}
+add_action( 'admin_footer', 'wjtt_js_template' );
+
+function wjtt_js_field_template() {
+?>
+<script type="text/html" id="tmpl-social-links-fields">
+	<# _.each( data, function(  social, index ) {
+		var isChecked = ('1'===social.target) ? 'checked' : '';
+			#>
+	<tr data-index="{{index}}">
+		<td><input type="text" name="wjtt[social][{{index}}][title]" value="{{social.title}}" /></td>
+		<td><input type="text" name="wjtt[social][{{index}}][link]" value="{{social.link}}" /></td>
+		<td><input type="checkbox" name="wjtt[social][{{index}}][target]" value="1" {{isChecked}} /></td>
+		<td><a href="javascript:void(0);" data-deleteindex="{{index}}" class="delete-row"><span class="dashicons dashicons-trash"></span></td>
+	</tr>
+	<# } ) #>
+</script>
+<?php
+}
+add_action( 'admin_footer', 'wjtt_js_field_template' );
+
+/**
+ * Callback to save function.
+ */
+function wjtt_save_data() {
+	if ( ! isset( $_POST['wjtt_nonce'] ) ) {
+		return;
+	}
+	if ( ! wp_verify_nonce( $_POST['wjtt_nonce'], '_wjtt_nonce_action' ) ) {
+
+				wp_die( __( 'Sorry, your nonce did not verify.' ) );
+				exit;
+
+	} else {
+		// var_dump( $_POST['wjtt']['social'] );exit;
+			update_option( 'wjtt_values', $_POST['wjtt'] );
+	}
+}
+add_action( 'load-toplevel_page_social-icons', 'wjtt_save_data' );

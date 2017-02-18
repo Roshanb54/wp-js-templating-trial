@@ -14,10 +14,10 @@
 		<table class="form-table" id="social-icons-listing-table">
 			<thead>
 				<tr>
-					<th>Title</th>
-					<th>URL</th>
-					<th>Target</th>
-					<th>Action</th>
+					<th><?php esc_html_e( 'Title' ); ?></th>
+					<th><?php esc_html_e( 'URL' ); ?></th>
+					<th><?php esc_html_e( 'Open in new window' ); ?></th>
+					<th><?php esc_html_e( 'Action' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
